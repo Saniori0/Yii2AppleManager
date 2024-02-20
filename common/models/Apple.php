@@ -21,7 +21,7 @@ class Apple extends ActiveRecord
 
     public $color;
     public $status;
-    public $left; // How many % of apple left
+    public $size; // How many % of apple left
 
     public static function tableName()
     {
@@ -39,7 +39,7 @@ class Apple extends ActiveRecord
     {
         return [
             ['status', 'default', 'value' => self::STATUS_ON_THE_TREE],
-            ['left', 'default', 'value' => 100],
+            ['size', 'default', 'value' => 100],
             ['color', 'default', 'value' => self::COLORS[0]],
             ['color', 'in', 'range' => self::COLORS],
             ['status', 'in', 'range' => [self::STATUS_ON_THE_TREE, self::STATUS_ON_THE_GROUND, self::STATUS_EATED]],
@@ -53,10 +53,17 @@ class Apple extends ActiveRecord
 
     }
 
-    public static function getRandomColor(): string
+    public static function getRandomColorIndex(): string
     {
 
         return array_rand(self::COLORS);
+
+    }
+
+    public static function getRandomColor(): string
+    {
+
+        return self::getColorByIndex(self::getRandomColorIndex());
 
     }
 
@@ -73,13 +80,9 @@ class Apple extends ActiveRecord
 
         if ($this->status == self::STATUS_ON_THE_TREE) throw new Exception("Apple on the tree");
 
-        $this->left -= abs($percentToEat);
+        $this->size -= abs($percentToEat);
 
-        if ($this->left <= 100) {
-
-            $this->status = self::STATUS_EATED;
-
-        }
+        if ($this->size <= 100) $this->status = self::STATUS_EATED;
 
         return $this->save();
 
@@ -103,16 +106,23 @@ class Apple extends ActiveRecord
 
     }
 
-    public function setColorByIndex(int $index = 0): bool
+    public function setColor(int $colorIndex): bool
     {
 
-        $color = self::getColorByIndex($index);
+        $color = self::getColorByIndex($colorIndex);
 
         if ($this->color == $color) return true;
 
         $this->color = $color;
 
         return $this->save();
+
+    }
+
+    public function setRandomColor(): bool
+    {
+
+        return $this->setColor($this->getRandomColorIndex());
 
     }
 
