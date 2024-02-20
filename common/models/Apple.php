@@ -5,6 +5,7 @@ namespace common\models;
 use PHPUnit\Util\Exception;
 use yii\behaviors\TimestampBehavior;
 use yii\db\ActiveRecord;
+use yii\db\Expression;
 
 /**
  * @property integer $created_at
@@ -13,7 +14,7 @@ class Apple extends ActiveRecord
 {
 
     const COLORS = ["green", "red", "yellow", "blue", "brown", "gray"];
-    const FRESH_DAYS = 5; // Days does an apple remain fresh from the moment it is created. Wikipedia says 5 - 7 days.
+    const FRESH_SECONDS = 18000; // Seconds does an apple remain fresh from the moment it is created.
 
     const STATUS_EATED = 0;
     const STATUS_ON_THE_TREE = 1;
@@ -25,24 +26,30 @@ class Apple extends ActiveRecord
 
     public static function tableName()
     {
-        return '{{%apple}}';
+        return "{{%apple}}";
     }
 
     public function behaviors()
     {
         return [
-            TimestampBehavior::class,
+            [
+                "class" => TimestampBehavior::class,
+                "createdAtAttribute" => "create_time",
+                "updatedAtAttribute" => "update_time",
+                "attributes" => ["fell_time"],
+                "value" => new Expression("NOW()"),
+            ],
         ];
     }
 
     public function rules()
     {
         return [
-            ['status', 'default', 'value' => self::STATUS_ON_THE_TREE],
-            ['size', 'default', 'value' => 100],
-            ['color', 'default', 'value' => self::COLORS[0]],
-            ['color', 'in', 'range' => self::COLORS],
-            ['status', 'in', 'range' => [self::STATUS_ON_THE_TREE, self::STATUS_ON_THE_GROUND, self::STATUS_EATED]],
+            ["status", "default", "value" => self::STATUS_ON_THE_TREE],
+            ["size", "default", "value" => 100],
+            ["color", "default", "value" => self::COLORS[0]],
+            ["color", "in", "range" => self::COLORS],
+            ["status", "in", "range" => [self::STATUS_ON_THE_TREE, self::STATUS_ON_THE_GROUND, self::STATUS_EATED]],
         ];
     }
 
@@ -78,6 +85,8 @@ class Apple extends ActiveRecord
     public function eat(float $percentToEat = 100): bool
     {
 
+        if (!$this->isFresh()) throw new Exception("Apple not fresh");
+
         if ($this->status == self::STATUS_ON_THE_TREE) throw new Exception("Apple on the tree");
 
         $this->size -= abs($percentToEat);
@@ -94,6 +103,7 @@ class Apple extends ActiveRecord
         if ($this->status == self::STATUS_ON_THE_GROUND) return true;
 
         $this->status = self::STATUS_ON_THE_GROUND;
+        $this->touch("fell_time");
 
         return $this->save();
 
@@ -129,7 +139,7 @@ class Apple extends ActiveRecord
     public function isFresh(): bool
     {
 
-        return $this->daysLived() < 84600 * self::FRESH_DAYS;
+        return $this->daysLived() < self::FRESH_SECONDS;
 
     }
 
