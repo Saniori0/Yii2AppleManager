@@ -2,7 +2,9 @@
 
 namespace backend\controllers;
 
+use common\models\Apple;
 use common\models\LoginForm;
+use PHPUnit\Exception;
 use Yii;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
@@ -20,24 +22,26 @@ class SiteController extends Controller
     public function behaviors()
     {
         return [
-            'access' => [
-                'class' => AccessControl::class,
-                'rules' => [
+            "access" => [
+                "class" => AccessControl::class,
+                "rules" => [
                     [
-                        'actions' => ['login', 'error'],
-                        'allow' => true,
+                        "actions" => ["login", "error"],
+                        "allow" => true,
                     ],
                     [
-                        'actions' => ['logout', 'index'],
-                        'allow' => true,
-                        'roles' => ['@'],
+                        "actions" => ["logout", "index", "create_apple", "eat_apple", "pluck_apple", "delete_apple"],
+                        "allow" => true,
+                        "roles" => ["@"],
                     ],
                 ],
             ],
-            'verbs' => [
-                'class' => VerbFilter::class,
-                'actions' => [
-                    'logout' => ['post'],
+            "verbs" => [
+                "class" => VerbFilter::class,
+                "actions" => [
+                    "logout" => ["post"],
+                    "create_apple" => ["post"],
+                    "eat_apple" => ["post", "get"]
                 ],
             ],
         ];
@@ -49,8 +53,8 @@ class SiteController extends Controller
     public function actions()
     {
         return [
-            'error' => [
-                'class' => \yii\web\ErrorAction::class,
+            "error" => [
+                "class" => \yii\web\ErrorAction::class,
             ],
         ];
     }
@@ -62,7 +66,13 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        return $this->render('index');
+
+        return $this->render("index", [
+            "apples" => Apple::find()->where("not status = " . Apple::STATUS_EATED)->orderBy([
+                "id" => SORT_DESC
+            ])->all()
+        ]);
+
     }
 
     /**
@@ -76,17 +86,17 @@ class SiteController extends Controller
             return $this->goHome();
         }
 
-        $this->layout = 'blank';
+        $this->layout = "blank";
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             return $this->goBack();
         }
 
-        $model->password = '';
+        $model->password = "";
 
-        return $this->render('login', [
-            'model' => $model,
+        return $this->render("login", [
+            "model" => $model,
         ]);
     }
 

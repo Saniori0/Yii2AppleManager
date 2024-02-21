@@ -20,13 +20,9 @@ class Apple extends ActiveRecord
     const STATUS_ON_THE_TREE = 1;
     const STATUS_ON_THE_GROUND = 2;
 
-    public $color;
-    public $status;
-    public $size; // How many % of apple left
-
     public static function tableName()
     {
-        return "{{%apple}}";
+        return "apple";
     }
 
     public function behaviors()
@@ -85,13 +81,11 @@ class Apple extends ActiveRecord
     public function eat(float $percentToEat = 100): bool
     {
 
-        if (!$this->isFresh()) throw new Exception("Apple not fresh");
-
-        if ($this->status == self::STATUS_ON_THE_TREE) throw new Exception("Apple on the tree");
+        if (!$this->canEat()) throw new Exception("Apple on the tree or not fresh");
 
         $this->size -= abs($percentToEat);
 
-        if ($this->size <= 100) $this->status = self::STATUS_EATED;
+        if ($this->size <= 0) $this->status = self::STATUS_EATED;
 
         return $this->save();
 
@@ -103,16 +97,38 @@ class Apple extends ActiveRecord
         if ($this->status == self::STATUS_ON_THE_GROUND) return true;
 
         $this->status = self::STATUS_ON_THE_GROUND;
+
         $this->touch("fell_time");
 
         return $this->save();
 
     }
 
+    public function getCreateTimestamp(): false|int
+    {
+
+        return strtotime($this->create_time);
+
+    }
+
+    public function getFellTimestamp(): false|int
+    {
+
+        return strtotime($this->fell_time);
+
+    }
+
     public function daysLived(): int
     {
 
-        return time() - $this->created_at;
+        return time() - $this->getCreateTimestamp();
+
+    }
+
+    public function daysOnTheGround(): int
+    {
+
+        return time() - $this->getFellTimestamp();
 
     }
 
@@ -139,9 +155,24 @@ class Apple extends ActiveRecord
     public function isFresh(): bool
     {
 
-        return $this->daysLived() < self::FRESH_SECONDS;
+        if ($this->isOnTree()) return true;
+
+        return $this->daysOnTheGround() < self::FRESH_SECONDS;
 
     }
 
+    public function isOnTree(): bool
+    {
+
+        return $this->status == self::STATUS_ON_THE_TREE;
+
+    }
+
+    public function canEat(): bool
+    {
+
+        return $this->isFresh() && !$this->isOnTree();
+
+    }
 
 }

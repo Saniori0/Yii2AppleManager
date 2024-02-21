@@ -2,52 +2,74 @@
 
 /** @var yii\web\View $this */
 
-$this->title = 'My Yii Application';
+use yii\bootstrap5\Html;
+use yii\bootstrap5\ActiveForm;
+
 ?>
 <div class="site-index">
 
-    <div class="jumbotron text-center bg-transparent">
-        <h1 class="display-4">Congratulations!</h1>
+    <div>
 
-        <p class="lead">You have successfully created your Yii-powered application.</p>
+        <h1>Apples</h1>
 
-        <p><a class="btn btn-lg btn-success" href="https://www.yiiframework.com">Get started with Yii</a></p>
+
+        <?php
+        $form = ActiveForm::begin([
+            "action" => "index.php?r=apples/create",
+            "method" => "post"
+        ]);
+        print html::submitButton("Create Apple", ["class" => "btn btn-primary"]);
+        ActiveForm::end();
+
+        ?>
     </div>
 
-    <div class="body-content">
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Color</th>
+            <th scope="col">Size</th>
+            <th scope="col">Status</th>
+            <th scope="col">Is Fresh</th>
+            <th scope="col">Create Time</th>
+            <th scope="col">Fell Time</th>
+            <th scope="col">Delete</th>
+            <th scope="col">Pluck</th>
+            <th scope="col">Eat</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php
+        foreach ($apples as $apple) {
 
-        <div class="row">
-            <div class="col-lg-4">
-                <h2>Heading</h2>
+            $status = ($apple->status == 1) ? "On Tree" : "On Ground";
+            $freshColor = $apple->isFresh() ? "lime" : "red";
+            $fell_time = $apple->status == 2 ? $apple->fell_time : "On Tree";
+            $canEat = $apple->canEat();
 
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                    fugiat nulla pariatur.</p>
+            $buttons = [
+                    "pluck" => $apple->isOnTree() ? "<a href=\"index.php?r=apples/pluck&id={$apple->id}\" class=\"btn btn-primary\">pluck</a>" : "-",
+                    "eat" => $canEat ? "<a href=\"index.php?r=apples/eat&id={$apple->id}\" class=\"btn btn-success\">eat</a>" : "-"
+            ];
 
-                <p><a class="btn btn-outline-secondary" href="https://www.yiiframework.com/doc/">Yii Documentation &raquo;</a></p>
-            </div>
-            <div class="col-lg-4">
-                <h2>Heading</h2>
 
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                    fugiat nulla pariatur.</p>
+            print("<tr>
+                   <th scope=\"row\">{$apple->id}</th>
+                   <td><div style=\"width:25px;height:25px;background-color:{$apple->color};border-radius:100px;\"></div></td>
+                   <td>{$apple->size}%</td>
+                   <td>$status</td>
+                   <td><div style=\"width:15px;height:15px;background-color:{$freshColor};border-radius:100px;\"></div></td>
+                   <td>{$apple->create_time}</td>
+                   <td>$fell_time</td>
+                   <td><a href=\"index.php?r=apples/delete&id={$apple->id}\" class=\"btn btn-danger\">delete</a></td>
+                   <td>{$buttons['pluck']}</td>
+                   <td>{$buttons['eat']}</td>
+                   </tr>");
 
-                <p><a class="btn btn-outline-secondary" href="https://www.yiiframework.com/forum/">Yii Forum &raquo;</a></p>
-            </div>
-            <div class="col-lg-4">
-                <h2>Heading</h2>
+        }
+        ?>
+        </tbody>
+    </table>
 
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et
-                    dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-                    ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-                    fugiat nulla pariatur.</p>
-
-                <p><a class="btn btn-outline-secondary" href="https://www.yiiframework.com/extensions/">Yii Extensions &raquo;</a></p>
-            </div>
-        </div>
-
-    </div>
 </div>
